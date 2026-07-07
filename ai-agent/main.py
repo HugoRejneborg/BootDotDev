@@ -8,13 +8,14 @@ def main():
 
     load_dotenv()
     api_key = os.environ.get("OPENROUTER_API_KEY")
+    
     if not api_key:
         raise RuntimeError("OPENROUTER_API_KEY environment variable is not set.")
-    else:
-        client = OpenAI(
-            base_url="https://openrouter.ai/api/v1",
-            api_key=api_key,
-        )
+    
+    client = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=api_key,
+    )
 
     model = "openrouter/free"
     messages=[
@@ -28,7 +29,14 @@ def main():
         messages=messages  # type: ignore
     )
 
-    print(response.choices[0].message.content)
+    if not response:
+        raise RuntimeError("No response received from the OpenAI API.")
+
+    print(f"Prompt tokens: {response.usage.prompt_tokens}") # type: ignore
+    print(f"Response tokens: {response.usage.completion_tokens}") # type: ignore
+    print(f"Model used: {response.model}") # type: ignore
+    print(f"\nUser prompt:\n{messages[0]['content']}")
+    print(f"\nAI response:\n{response.choices[0].message.content}")
 
     print("\nGoodbye from ai-agent\n")
 
