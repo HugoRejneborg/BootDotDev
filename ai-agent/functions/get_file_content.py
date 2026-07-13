@@ -2,6 +2,7 @@ import os
 from config import MAX_READ_CHARS
 
 def get_file_content(working_directory: str, file_path: str) -> str:
+    
     try:
         working_dir_path = os.path.abspath(working_directory)
         target_file_path = os.path.normpath(os.path.join(working_dir_path, file_path))
