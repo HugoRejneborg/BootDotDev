@@ -1,7 +1,10 @@
+import json
 import os
 from dotenv import load_dotenv, parser
 from openai import OpenAI
 import argparse
+from prompts import system_prompt
+from call_functions import available_functions
 
 def main():
 
@@ -27,23 +30,34 @@ def main():
     model = "openrouter/free"
     messages=[
         {
+            "role": "system",
+            "content": system_prompt
+        },
+        {
             "role": "user",
             "content": args.user_prompt
         }
     ]
     response = client.chat.completions.create(
         model=model,
-        messages=messages  # type: ignore
+        messages=messages,  # type: ignore
+        tools=available_functions, #type: ignore
     )
 
     if not response:
         raise RuntimeError("No response received from the OpenAI API.")
+
+    message = response.choices[0].message
+    for tool_call in message.tool_calls: #type: ignore
+        function_args = json.loads(tool_call.function.arguments or "{}") # type: ignore
+        print(f"Calling function: {tool_call.function.name}({function_args})") # type: ignore
 
     if(args.verbose):
         print(f"Prompt tokens: {response.usage.prompt_tokens}") # type: ignore
         print(f"Response tokens: {response.usage.completion_tokens}") # type: ignore
         print(f"Model used: {response.model}") # type: ignore
         print(f"\nUser prompt:\n{messages[0]['content']}")
+
     print(f"\nAI response:\n{response.choices[0].message.content}")
 
 if __name__ == "__main__":
