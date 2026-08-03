@@ -1,10 +1,9 @@
-import json
 import os
 from dotenv import load_dotenv, parser
 from openai import OpenAI
 import argparse
 from prompts import system_prompt
-from call_functions import available_functions
+from call_functions import available_functions, call_function
 
 def main():
 
@@ -48,9 +47,12 @@ def main():
         raise RuntimeError("No response received from the OpenAI API.")
 
     message = response.choices[0].message
-    for tool_call in message.tool_calls: #type: ignore
-        function_args = json.loads(tool_call.function.arguments or "{}") # type: ignore
-        print(f"Calling function: {tool_call.function.name}({function_args})") # type: ignore
+    for tool_call in message.tool_calls or []:
+        result_message = call_function(tool_call, args.verbose)
+        if not result_message.get("content"):
+            raise RuntimeError(f"Function call {tool_call.function.name} returned no content")
+        if args.verbose:
+            print(f"-> {result_message['content']}")
 
     if(args.verbose):
         print(f"Prompt tokens: {response.usage.prompt_tokens}") # type: ignore
